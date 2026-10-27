@@ -2,7 +2,7 @@ workflows:
   android-workflow:
     name: Android Build
     max_build_duration: 60
-    instance_type: mac_mini_m1
+    instance_type: linux_x2
     environment:
       node: latest
       java: 17
@@ -12,26 +12,25 @@ workflows:
           # 1. Распаковываем архив
           unzip -o *.zip
           
-          # 2. Ищем файл игры (index.html)
+          # 2. Ищем файл игры
           HTML_FILE=$(find . -name "index.html" | head -n 1)
           
-          # 3. Устанавливаем Capacitor (обертку для APK)
+          # 3. Устанавливаем Capacitor
           npm init -y
           npm i @capacitor/core @capacitor/cli @capacitor/android
           
-          # 4. Копируем игру в папку www
+          # 4. Копируем игру
           mkdir www
           cp "$HTML_FILE" www/index.html
           
-          # 5. Инициализируем Android-проект
+          # 5. Инициализируем Android
           npx cap init "Block and Fail" com.mute17.blockandfail --web-dir=www
           npx cap add android
           
-          # 6. Делаем полноэкранный режим (убираем панели)
-          sed -i 's/Theme.AppCompat.Light.NoActionBar/Theme.AppCompat.Light.NoActionBar.Fullscreen/g' android/app/src/main/res/values/styles.xml || true
-          sed -i 's/Theme.AppCompat.Light.DarkActionBar/Theme.AppCompat.Light.NoActionBar.Fullscreen/g' android/app/src/main/res/values/styles.xml || true
-
           npx cap sync
+          
+          # 6. Принудительно ставим Java 17 в Gradle
+          echo "org.gradle.java.home=/usr/lib/jvm/java-17-openjdk-amd64" >> android/gradle.properties
           
           # 7. Собираем APK
           cd android

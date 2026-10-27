@@ -17,6 +17,7 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
+        cache: gradle
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -35,16 +36,21 @@ jobs:
         npx cap add android
         npx cap sync
 
-    - name: Fix Java Version
+    - name: Fix Java Version and Build
       run: |
-        echo "org.gradle.java.home=$JAVA_HOME" > android/gradle.properties
-        sed -i 's/JavaVersion.VERSION_21/JavaVersion.VERSION_17/g' android/capacitor-android/build.gradle || true
-
-    - name: Build APK
-      run: |
+        # 1. Жестко прописываем Java 17
+        echo "org.gradle.java.home=$JAVA_HOME" >> android/gradle.properties
+        
+        # 2. Добавляем репозиторий Google (чтобы скачал AndroidX)
+        echo "repositories { google(); mavenCentral() }" >> android/build.gradle
+        
+        # 3. Принимаем лицензии Android SDK
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+        
+        # 4. Собираем
         cd android
         chmod +x gradlew
-        ./gradlew assembleDebug
+        ./gradlew assembleDebug --stacktrace
 
     - name: Upload APK
       uses: actions/upload-artifact@v4

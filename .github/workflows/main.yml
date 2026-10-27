@@ -28,14 +28,15 @@ jobs:
         unzip -o *.zip
         HTML_FILE=$(find . -name "index.html" | head -n 1)
         npm init -y
-        npm i @capacitor/core@5 @capacitor/cli@5 @capacitor/android@5
+        # Добавили @capacitor/haptics@5
+        npm i @capacitor/core@5 @capacitor/cli@5 @capacitor/android@5 @capacitor/haptics@5
         mkdir www
         cp "$HTML_FILE" www/index.html
         npx cap init "Block and Fail" com.mute17.blockandfail --web-dir=www
         npx cap add android
         npx cap sync
 
-    - name: Fix Java Version and Build
+    - name: Fix Manifest and Java
       run: |
         # 1. Жестко прописываем Java 17
         echo "org.gradle.java.home=$JAVA_HOME" >> android/gradle.properties
@@ -43,10 +44,15 @@ jobs:
         # 2. Добавляем репозиторий Google
         echo "repositories { google(); mavenCentral() }" >> android/build.gradle
         
-        # 3. Принимаем лицензии Android SDK (если папка существует)
+        # 3. Патчим AndroidManifest (Разрешение на вибрацию + Портретный режим)
+        MANIFEST=android/app/src/main/AndroidManifest.xml
+        sed -i 's#</manifest>#    <uses-permission android:name="android.permission.VIBRATE" />\n</manifest>#' $MANIFEST
+        sed -i 's#<activity #<activity android:screenOrientation="portrait" #' $MANIFEST
+
+        # 4. Принимаем лицензии Android SDK
         yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
         
-        # 4. Собираем
+        # 5. Собираем
         cd android
         chmod +x gradlew
         ./gradlew assembleDebug

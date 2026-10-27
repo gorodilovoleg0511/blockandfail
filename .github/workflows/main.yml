@@ -17,7 +17,6 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        cache: gradle
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -41,16 +40,16 @@ jobs:
         # 1. Жестко прописываем Java 17
         echo "org.gradle.java.home=$JAVA_HOME" >> android/gradle.properties
         
-        # 2. Добавляем репозиторий Google (чтобы скачал AndroidX)
+        # 2. Добавляем репозиторий Google
         echo "repositories { google(); mavenCentral() }" >> android/build.gradle
         
-        # 3. Принимаем лицензии Android SDK
+        # 3. Принимаем лицензии Android SDK (если папка существует)
         yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
         
         # 4. Собираем
         cd android
         chmod +x gradlew
-        ./gradlew assembleDebug --stacktrace
+        ./gradlew assembleDebug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4

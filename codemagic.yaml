@@ -15,9 +15,9 @@ workflows:
           # 2. Ищем файл игры
           HTML_FILE=$(find . -name "index.html" | head -n 1)
           
-          # 3. Устанавливаем Capacitor
+          # 3. Устанавливаем Capacitor (жестко указываем версию 5, она стабильнее)
           npm init -y
-          npm i @capacitor/core @capacitor/cli @capacitor/android
+          npm i @capacitor/core@5 @capacitor/cli@5 @capacitor/android@5
           
           # 4. Копируем игру
           mkdir www
@@ -29,10 +29,16 @@ workflows:
           
           npx cap sync
           
-          # 6. Принудительно ставим Java 17 в Gradle
-          echo "org.gradle.java.home=/usr/lib/jvm/java-17-openjdk-amd64" >> android/gradle.properties
+          # 6. Жестко прописываем Java 17 для Capacitor и проекта
+          echo "org.gradle.java.home=/usr/lib/jvm/java-17-openjdk-amd64" > android/gradle.properties
+          echo "org.gradle.java.home=/usr/lib/jvm/java-17-openjdk-amd64" > android/app/gradle.properties || true
+          echo "org.gradle.java.home=/usr/lib/jvm/java-17-openjdk-amd64" > android/capacitor-android/gradle.properties || true
           
-          # 7. Собираем APK
+          # 7. Убираем требование Java 21 из самого кода (если оно там зашито)
+          sed -i 's/JavaVersion.VERSION_21/JavaVersion.VERSION_17/g' android/capacitor-android/build.gradle || true
+          sed -i 's/JavaVersion.VERSION_21/JavaVersion.VERSION_17/g' android/app/build.gradle || true
+          
+          # 8. Собираем APK
           cd android
           chmod +x gradlew
           ./gradlew assembleDebug

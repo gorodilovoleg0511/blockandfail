@@ -28,7 +28,6 @@ jobs:
         unzip -o *.zip
         HTML_FILE=$(find . -name "index.html" | head -n 1)
         npm init -y
-        # Добавили @capacitor/haptics@5
         npm i @capacitor/core@5 @capacitor/cli@5 @capacitor/android@5 @capacitor/haptics@5
         mkdir www
         cp "$HTML_FILE" www/index.html
